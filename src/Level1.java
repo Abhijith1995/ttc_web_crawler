@@ -1,0 +1,84 @@
+package mainPackage;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+
+public class Level1 {
+
+	public void getBusRoutes(DBCollection coll) 
+	{
+		
+	int fileLoopCounter = 500;
+	Document doc ;
+	  
+	  try 
+	  {
+
+		// Connects to TTC website
+		doc = Jsoup.connect("https://www.ttc.ca/Routes/Buses.jsp").get();
+		
+		int loopCounterBuses = 0;
+
+		// get all links
+		Elements links = doc.select(".main-content a[href]");
+		for (Element link : links)
+		{
+			loopCounterBuses++;
+			
+			System.out.println("Local Counter of Buses = "+ loopCounterBuses);
+			
+			if(fileLoopCounter-- <= 0) // For debuggin purposes
+				break;
+		
+
+			
+			
+			// gets the value of the text of the link 
+			String textLink = link.text();
+			String busName, busNumber ;
+			
+			
+			busName = mainClass.fixData(textLink) ;
+			
+			busNumber = busName.substring(0, busName.indexOf(' '));
+			busName   = busName.substring(busName.indexOf(' ')) ;
+			
+			
+			
+			try {
+				
+				
+				// Calls function to get data from given route
+				BasicDBObject level2 = new BasicDBObject();
+				level2.put( "busName", busNumber.concat(" ".concat( busName))); 
+				// Inserts acquired details into level 2 Database object
+				
+				
+				// Now calls the Level 2 class to go and get all the details of the bus
+				//		stops on given route
+				 Level2.getDataFromRoute("http://ttc.ca".concat(
+						 link.attr("href").toString()),
+						busNumber,busName, level2) ;
+					
+					coll.insert(level2) ; // Pushes the object into level2 DB object
+				
+			
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			} 	
+			 
+		}
+		
+	
+	}	 
+	 catch (Exception e) {
+		e.printStackTrace();
+	}
+	}
+}
